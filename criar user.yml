@@ -1,0 +1,27 @@
+info:
+  name: criar user
+  type: http
+  seq: 1
+
+http:
+  method: post
+  url: http://localhost:8080/
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "nome": "continente",
+        "morada": "rua sesasmo",
+        "contacto": "966",
+        "tipo": "DOADOR"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

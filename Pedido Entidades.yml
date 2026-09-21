@@ -1,0 +1,27 @@
+info:
+  name: Pedido Entidades
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8080/api
+  headers:
+    - name: content-type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "nome": "continente",
+        "morada": "rua sesasmo",
+        "contacto": "966",
+        "tipo": "DOADOR"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
