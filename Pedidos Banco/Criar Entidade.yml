@@ -1,0 +1,27 @@
+info:
+  name: Criar Entidade
+  type: http
+  seq: 1
+
+http:
+  method: post
+  url: http://localhost:8080/api/entidades
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "nome": "Aldeia SOS",
+        "morada": "Rua Linhaça",
+        "contacto": "777 777 777 ",
+        "tipo": "Beneficiario"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

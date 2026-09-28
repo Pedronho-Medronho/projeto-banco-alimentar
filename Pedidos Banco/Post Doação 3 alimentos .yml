@@ -1,0 +1,38 @@
+info:
+  name: "Post Doação 3 alimentos "
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:8080/api/doacoes
+  body:
+    type: json
+    data: |-
+      {
+        "doadorId": 1,
+         "conteudos": [
+          {
+            "nomeAlimento": "Arroz Branco",
+            "marca": "Cristal",
+            "validade": "2027-12-31"
+          },
+          {
+            "nomeAlimento": "Massa Esparguete",
+            "marca": "Gallo",
+            "validade": "2027-08-15"
+          },
+          {
+            "nomeAlimento": "Feijão Preto",
+            "marca": "Cigala",
+            "validade": "2026-11-30"
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

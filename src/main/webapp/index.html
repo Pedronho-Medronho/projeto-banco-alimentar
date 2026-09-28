@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Banco Alimentar</title>
+</head>
+<body>
+    <h1>Banco Alimentar</h1>
+
+    <!-- Botões principais -->
+    <button type="button" onclick="mostrarRegisto()">Registar utilizador</button>
+    <button type="button" onclick="mostrarDoacao()">Propor doação</button>
+
+    <!-- Formulário de registo -->
+    <div id="formRegisto" style="display:none">
+        <h2>Registar Utilizador</h2>
+        <input id="nome" placeholder="Nome"><br>
+        <input id="morada" placeholder="Morada"><br>
+        <input id="contacto" placeholder="Contacto"><br>
+        <input id="email" placeholder="Email"><br>
+        <select id="tipo">
+            <option value="DOADOR">DOADOR</option>
+            <option value="BENEFICIARIO">BENEFICIARIO</option>
+        </select><br>
+        <button type="button" onclick="registar()">Enviar</button>
+        <p id="respostaRegisto"></p>
+    </div>
+
+    <!-- Formulário de doação -->
+    <div id="formDoacao" style="display:none">
+        <h2>Propor Doação</h2>
+        <input id="doadorId" placeholder="ID do doador"><br>
+        <input id="nomeAlimento" placeholder="Alimento"><br>
+        <input id="marca" placeholder="Marca"><br>
+        <input id="validade" placeholder="Validade (AAAA-MM-DD)"><br>
+        <input id="quantidade" placeholder="Quantidade"><br>
+        <button type="button" onclick="doar()">Enviar</button>
+        <p id="respostaDoacao"></p>
+    </div>
+
+    <!-- Script de comunicação com a API -->
+    <script>
+        function mostrarRegisto() {
+            document.getElementById("formRegisto").style.display = "block";
+            document.getElementById("formDoacao").style.display = "none";
+        }
+
+        function mostrarDoacao() {
+            document.getElementById("formDoacao").style.display = "block";
+            document.getElementById("formRegisto").style.display = "none";
+        }
+
+        async function registar() {
+            try {
+                const entidade = {
+                    nome: document.getElementById("nome").value,
+                    morada: document.getElementById("morada").value,
+                    contacto: document.getElementById("contacto").value,
+                    email: document.getElementById("email").value,
+                    tipo: document.getElementById("tipo").value
+                };
+                const resposta = await fetch("/api/entidades", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(entidade)
+                });
+                if (resposta.ok) {
+                    const dados = await resposta.json();
+                    document.getElementById("respostaRegisto").textContent =
+                        "Registado com ID: " + dados.id;
+                } else {
+                    document.getElementById("respostaRegisto").textContent =
+                        "Erro " + resposta.status;
+                }
+            } catch (erro) {
+                document.getElementById("respostaRegisto").textContent =
+                    "Erro de rede: " + erro;
+            }
+        }
+
+        async function doar() {
+            try {
+                const doacao = {
+                    doadorId: document.getElementById("doadorId").value,
+                    conteudos: [{
+                        nomeAlimento: document.getElementById("nomeAlimento").value,
+                        marca: document.getElementById("marca").value,
+                        validade: document.getElementById("validade").value,
+                        quantidade: parseFloat(document.getElementById("quantidade").value)
+                    }]
+                };
+                const resposta = await fetch("/api/doacoes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(doacao)
+                });
+                if (resposta.ok) {
+                    const dados = await resposta.json();
+                    document.getElementById("respostaDoacao").textContent =
+                        "Doação registada com ID: " + dados.id;
+                } else {
+                    document.getElementById("respostaDoacao").textContent =
+                        "Erro " + resposta.status;
+                }
+            } catch (erro) {
+                document.getElementById("respostaDoacao").textContent =
+                    "Erro de rede: " + erro;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+info:
+  name: Doação com quantidade
+  type: http
+
+http:
+  method: POST
+  url: http://localhost:8080/api/doacoes
+  body:
+    type: json
+    data: |-
+      {
+        "doadorId": 1,
+        "conteudos": [
+          { "nomeAlimento": "Arroz", "marca": "Cristal", "validade": "2027-12-31", "quantidade": 100 }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
