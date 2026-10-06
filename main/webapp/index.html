@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Banco Alimentar</title>
+</head>
+<body>
+    <h1>Banco Alimentar</h1>
+
+    <!-- Botões principais -->
+ 
+    <button type="button" onclick="mostrarRegisto()">Registar utilizador</button>
+    <button type="button" onclick="mostrarDoacao()">Propor doação</button>
+    <button type="button" onclick="location.href='/funcionario.html'">Área do funcionário</button>
+
+    <!-- Formulário de registo -->
+    <div id="formRegisto" style="display:none">
+        <h2>Registar Utilizador</h2>
+        <input id="nome" placeholder="Nome"><br>
+        <input id="morada" placeholder="Morada"><br>
+        <input id="contacto" placeholder="Contacto"><br>
+        <input id="email" placeholder="Email"><br>
+        <select id="tipo">
+            <option value="DOADOR">DOADOR</option>
+            <option value="BENEFICIARIO">BENEFICIARIO</option>
+        </select><br>
+        <button type="button" onclick="registar()">Enviar</button>
+        <p id="respostaRegisto"></p>
+    </div>
+
+    <!-- Formulário de doação -->
+    <div id="formDoacao" style="display:none">
+        <h2>Propor Doação</h2>
+        <input id="doadorId" placeholder="ID do doador"><br>
+
+        <!-- Linhas de alimentos (dinâmicas) -->
+        <div id="listaAlimentos"></div>
+
+        <button type="button" onclick="adicionarAlimento()">+ Adicionar alimento</button><br>
+        <button type="button" onclick="doar()">Enviar</button>
+        <p id="respostaDoacao"></p>
+    </div>
+
+        <!-- CASCATA: tipo de alimento -->
+        <select id="tipoAlimento">
+            <option value="SECOS">Secos</option>
+            <option value="PERECIVEIS">Perecíveis</option>
+            <option value="ENLATADOS">Enlatados</option>
+            <option value="MATERNAL">Maternal</option>
+            <option value="OUTROS">Outros</option>
+        </select><br>
+
+        <input id="pesoMedio" placeholder="Peso médio por unidade (kg)"><br>
+                // Cria uma linha de alimento (n = número da linha, para IDs únicos)
+        function linhaAlimento(n) {
+            return '<div class="linhaAlimento" style="border:1px solid #ccc; padding:8px; margin:8px 0">'
+                + '<b>Alimento ' + n + '</b><br>'
+                + '<input id="nomeAlimento' + n + '" placeholder="Alimento"><br>'
+                + '<input id="marca' + n + '" placeholder="Marca"><br>'
+                + '<input id="validade' + n + '" type="date"><br>'
+                + '<input id="quantidade' + n + '" placeholder="Quantidade"><br>'
+                + '<select id="tipoAlimento' + n + '">'
+                + '  <option value="SECOS">Secos</option>'
+                + '  <option value="PERECIVEIS">Perecíveis</option>'
+                + '  <option value="ENLATADOS">Enlatados</option>'
+                + '  <option value="MATERNAL">Maternal</option>'
+                + '  <option value="OUTROS">Outros</option>'
+                + '</select><br>'
+                + '<input id="pesoMedio' + n + '" placeholder="Peso médio por unidade (kg)"><br>'
+                + (n > 1 ? '<button type="button" onclick="removerAlimento(this)">✕ Remover este alimento</button>' : '')
+                + '</div>';
+        }
+
+        // Contador de linhas
+        let totalAlimentos = 0;
+
+        function adicionarAlimento() {
+            totalAlimentos++;
+            document.getElementById("listaAlimentos").insertAdjacentHTML(
+                "beforeend", linhaAlimento(totalAlimentos));
+        }
+
+        function removerAlimento(botao) {
+            botao.closest(".linhaAlimento").remove();
+        }
+        <button type="button" onclick="doar()"
+
+        <input id="pesoMedio" placeholder="Peso médio por unidade (kg)"><br>
+        <button type="button" onclick="doar()">Enviar</button>
+        <p id="respostaDoacao"></p>
+    </div>
+
+    <script>
+        function mostrarRegisto() {
+            document.getElementById("formRegisto").style.display = "block";
+            document.getElementById("formDoacao").style.display = "none";
+        }
+
+                function mostrarDoacao() {
+            document.getElementById("formDoacao").style.display = "block";
+            document.getElementById("formRegisto").style.display = "none";
+            if (totalAlimentos === 0) {
+                adicionarAlimento(); // primeira linha já pronta
+            }
+        }
+
+        async function registar() {
+            try {
+                const entidade = {
+                    nome: document.getElementById("nome").value,
+                    morada: document.getElementById("morada").value,
+                    contacto: document.getElementById("contacto").value,
+                    email: document.getElementById("email").value,
+                    tipo: document.getElementById("tipo").value
+                };
+                const resposta = await fetch("/api/entidades", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(entidade)
+                });
+                const texto = await resposta.text();
+                let dados;
+                try {
+                    dados = JSON.parse(texto);
+                } catch (e) {
+                    throw new Error("Erro interno do servidor");
+                }
+                if (resposta.ok) {
+                    document.getElementById("respostaRegisto").textContent =
+                        "Registado com ID: " + dados.id;
+                } else {
+                    document.getElementById("respostaRegisto").textContent =
+                        "⚠ " + (dados.erro || "Erro " + resposta.status);
+                }
+            } catch (erro) {
+                document.getElementById("respostaRegisto").textContent = "⚠ " + erro.message;
+            }
+        }
+
+        // SAFEGUARD: calendário nativo — validade vem sempre em aaaa-mm-dd
+                async function doar() {
+            try {
+                // Junta todas as linhas de alimento do formulário
+                const linhas = document.querySelectorAll(".linhaAlimento");
+                const conteudos = [];
+                for (const linha of linhas) {
+                    const n = linha.querySelector("input[id^='nomeAlimento']").id.replace("nomeAlimento", "");
+                    conteudos.push({
+                        nomeAlimento: document.getElementById("nomeAlimento" + n).value,
+                        marca: document.getElementById("marca" + n).value,
+                        validade: document.getElementById("validade" + n).value,
+                        quantidade: parseFloat(document.getElementById("quantidade" + n).value),
+                        tipoAlimento: document.getElementById("tipoAlimento" + n).value,
+                        pesoMedio: parseFloat(document.getElementById("pesoMedio" + n).value)
+                    });
+                }
+
+                if (conteudos.length === 0) {
+                    document.getElementById("respostaDoacao").textContent =
+                        "⚠ Adiciona pelo menos um alimento";
+                    return;
+                }
+                if (!conteudos[0].validade) {
+                    document.getElementById("respostaDoacao").textContent =
+                        "⚠ Escolhe a data de validade no calendário";
+                    return;
+                }
+                if (isNaN(conteudos[0].quantidade) || conteudos[0].quantidade <= 0) {
+                    document.getElementById("respostaDoacao").textContent =
+                        "⚠ Quantidade inválida";
+                    return;
+                }
+
+                const doacao = {
+                    doadorId: parseInt(document.getElementById("doadorId").value, 10),
+                    conteudos: conteudos
+                };
+
+                const resposta = await fetch("/api/doacoes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(doacao)
+                });
+                const texto = await resposta.text();
+                let dados;
+                try {
+                    dados = JSON.parse(texto);
+                } catch (e) {
+                    throw new Error("Erro interno do servidor — verifica os campos");
+                }
+                if (resposta.ok) {
+                    document.getElementById("respostaDoacao").textContent =
+                        "Doação registada com ID: " + dados.id + " (" + conteudos.length + " alimentos)";
+                } else {
+                    document.getElementById("respostaDoacao").textContent =
+                        "⚠ " + (dados.erro || "Erro " + resposta.status);
+                }
+            } catch (erro) {
+                document.getElementById("respostaDoacao").textContent = "⚠ " + erro.message;
+            }
+        }
+    </script>
+       
+</body>
+</html>

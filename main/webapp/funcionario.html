@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Banco Alimentar — Funcionário</title>
+</head>
+<body>
+    <h1>Área do Funcionário</h1>
+
+    <!-- Navegação -->
+    <a href="/index.html">← Página do doador</a>
+
+    <!-- Botões principais -->
+    <button type="button" onclick="mostrar('formSaida')">Registar saída</button>
+    <button type="button" onclick="carregarInventario()">Ver inventário</button>
+    <button type="button" onclick="carregarArmazem()">Ver armazém</button>
+
+    <!-- Formulário de saída -->
+    <div id="formSaida" style="display:none">
+        <h2>Registar Saída (entrega a beneficiário)</h2>
+        <input id="alimentoId" placeholder="ID do alimento"><br>
+        <input id="beneficiarioId" placeholder="ID do beneficiário"><br>
+        <input id="quantidadeSaida" placeholder="Quantidade"><br>
+        <button type="button" onclick="entregar()">Entregar</button>
+        <p id="respostaSaida"></p>
+    </div>
+
+    <!-- Inventário -->
+    <div id="painelInventario" style="display:none">
+        <h2>Inventário</h2>
+        <div id="listaInventario"></div>
+    </div>
+
+    <!-- Armazém -->
+    <div id="painelArmazem" style="display:none">
+        <h2>Estado do Armazém</h2>
+        <div id="listaArmazem"></div>
+    </div>
+
+    <!-- Script -->
+    <script>
+        function mostrar(id) {
+            ["formSaida", "painelInventario", "painelArmazem"].forEach(function (f) {
+                document.getElementById(f).style.display = "none";
+            });
+            document.getElementById(id).style.display = "block";
+        }
+
+        async function entregar() {
+            try {
+                const saida = {
+                    alimentoId: parseInt(document.getElementById("alimentoId").value, 10),
+                    beneficiarioId: parseInt(document.getElementById("beneficiarioId").value, 10),
+                    quantidade: parseFloat(document.getElementById("quantidadeSaida").value)
+                };
+                const resposta = await fetch("/api/saidas", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(saida)
+                });
+                const texto = await resposta.text();
+                let dados;
+                try {
+                    dados = JSON.parse(texto);
+                } catch (e) {
+                    throw new Error("Erro interno do servidor — verifica os campos");
+                }
+                if (resposta.ok) {
+                    document.getElementById("respostaSaida").textContent =
+                        "Saída registada com ID: " + dados.id;
+                } else {
+                    document.getElementById("respostaSaida").textContent =
+                        "⚠ " + (dados.erro || "Erro " + resposta.status);
+                }
+            } catch (erro) {
+                document.getElementById("respostaSaida").textContent = "⚠ " + erro.message;
+            }
+        }
+
+        async function carregarInventario() {
+            mostrar("painelInventario");
+            try {
+                const resposta = await fetch("/api/alimentos");
+                const alimentos = await resposta.json();
+                let html = "<ul>";
+                for (const a of alimentos) {
+                    html += "<li>[ID " + a.id + "] " + a.nomeAlimento + " (" + a.marca
+                        + ") — tipo: " + a.tipoAlimento
+                        + " — quantidade: " + a.quantidade
+                        + " — validade: " + a.validade + "</li>";
+                }
+                html += "</ul>";
+                document.getElementById("listaInventario").innerHTML = html;
+            } catch (erro) {
+                document.getElementById("listaInventario").textContent = "Erro: " + erro;
+            }
+        }
+
+        async function carregarArmazem() {
+            mostrar("painelArmazem");
+            try {
+                const resposta = await fetch("/api/armazem");
+                const armazem = await resposta.json();
+                let html = "<ul>";
+                for (const tipo in armazem) {
+                    const zona = armazem[tipo];
+                    html += "<li><b>" + tipo + "</b> — capacidade: " + zona.capacidade
+                        + " | ocupado: " + zona.ocupado
+                        + " | livre: " + zona.livre + "</li>";
+                }
+                html += "</ul>";
+                document.getElementById("listaArmazem").innerHTML = html;
+            } catch (erro) {
+                document.getElementById("listaArmazem").textContent = "Erro: " + erro;
+            }
+        }
+    </script>
+</html>
