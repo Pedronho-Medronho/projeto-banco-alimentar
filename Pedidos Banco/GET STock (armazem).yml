@@ -1,0 +1,14 @@
+info:
+  name: GET STock (armazem)
+  type: http
+
+http:
+  method: GET
+  url: http://localhost:8080/api/armazem
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

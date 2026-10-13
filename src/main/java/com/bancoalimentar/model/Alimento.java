@@ -8,6 +8,18 @@ public class Alimento {
     private String marca;
     private LocalDate validade;
     private Long origem; // id da doação origem
+    private Double quantidade;
+    private TipoAlimento tipoAlimento;
+    private Double pesoMedio; // peso médio por unidade (kg)
+
+    // ENUMERADOR PARA TIPO ALIMENTO
+    public enum TipoAlimento {
+        SECOS,
+        PERECIVEIS,
+        ENLATADOS,
+        MATERNAL,
+        OUTROS
+    }
 
     // Construtor
     public Alimento() {
@@ -55,11 +67,6 @@ public class Alimento {
         this.origem = origem;
     }
 
-    // Quantidade alimentos 
-
-    private Double quantidade;
-
-    // (dentro de Getters e Setters)
     public Double getQuantidade() {
         return quantidade;
     }
@@ -68,7 +75,23 @@ public class Alimento {
         this.quantidade = quantidade;
     }
 
-  
+    public TipoAlimento getTipoAlimento() {
+        return tipoAlimento;
+    }
+
+    public void setTipoAlimento(TipoAlimento tipoAlimento) {
+        this.tipoAlimento = tipoAlimento;
+    }
+
+    public Double getPesoMedio() {
+        return pesoMedio;
+    }
+
+    public void setPesoMedio(Double pesoMedio) {
+        this.pesoMedio = pesoMedio;
+    }
+
+    // Métodos de negócio
     public void adicionarQuantidade(Double valor) {
         this.quantidade += valor;
     }
@@ -77,9 +100,7 @@ public class Alimento {
         this.quantidade -= valor;
     }
 
-    
-
-  // Check validade alimento
+    // Check validade alimento
     public boolean estaVencido() {
         return LocalDate.now().isAfter(this.validade);
     }

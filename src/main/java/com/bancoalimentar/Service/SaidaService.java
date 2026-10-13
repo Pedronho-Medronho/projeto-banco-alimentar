@@ -1,5 +1,6 @@
 package com.bancoalimentar.Service;
 
+import com.bancoalimentar.model.Entidade;
 import com.bancoalimentar.model.Saida;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -17,6 +18,10 @@ public class SaidaService {
     @Inject
     private EntidadeService entidadeService;
 
+    @Inject
+    private ArmazemService armazemService;
+
+
     // Registra a saída e decrementa a quantidade do inventário
     public Saida criar(Saida saida) {
         var alimento = alimentoService.buscarPorId(saida.getAlimentoId());
@@ -26,9 +31,12 @@ public class SaidaService {
 
         var beneficiario = entidadeService.buscarPorId(saida.getBeneficiarioId());
         if (beneficiario == null) {
-            throw new RuntimeException("Beneficiário não encontrado!");
+         throw new RuntimeException("Beneficiário não encontrado!");
         }
-
+        if (beneficiario.getTipo() != Entidade.TipoEntidade.BENEFICIARIO) {
+            throw new RuntimeException("A entidade com ID " + saida.getBeneficiarioId()
+                    + " não é um BENEFICIARIO!");
+        }
         if (saida.getQuantidade() == null || saida.getQuantidade() <= 0
                 || saida.getQuantidade() > alimento.getQuantidade()) {
             throw new RuntimeException("Quantidade inválida ou superior ao inventário!");
@@ -38,12 +46,19 @@ public class SaidaService {
         saidas.add(saida);
 
         alimento.removerQuantidade(saida.getQuantidade());
+
+                armazemService.libertar(alimento.getTipoAlimento(), saida.getQuantidade());
+                saida.getQuantidade();
+
         if (alimento.getQuantidade() <= 0) {
             alimentoService.remover(alimento.getId());
         }
 
         return saida;
     }
+
+
+    
 
     public List<Saida> listar() {
         return saidas;

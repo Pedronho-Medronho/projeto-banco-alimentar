@@ -15,12 +15,19 @@ public class SaidaController {
     @Inject
     private SaidaService service;
 
-    // POST
+        // POST
     @POST
     public Response criar(Saida saida) {
-        return Response.ok(service.criar(saida)).build();
+        try {
+            return Response.ok(service.criar(saida)).build();
+        } catch (RuntimeException e) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(java.util.Map.of("erro", e.getMessage()))
+                    .build();
+        }
     }
 
+    
     // GET
     @GET
     public Response listarAll() {

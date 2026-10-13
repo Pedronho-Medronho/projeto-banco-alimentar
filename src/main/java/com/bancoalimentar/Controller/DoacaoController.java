@@ -2,7 +2,6 @@ package com.bancoalimentar.Controller;
 
 import com.bancoalimentar.Service.DoacaoService;
 import com.bancoalimentar.model.Doacao;
-import com.bancoalimentar.model.Entidade;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -17,9 +16,17 @@ public class DoacaoController {
     @Inject
     private DoacaoService service;
 
+
     @POST
     public Response criar(Doacao doacao) {
-        return Response.ok(service.criar(doacao)).build();
+        try {
+            return Response.ok(service.criar(doacao)).build();
+        } catch (RuntimeException e) {
+            //aviso 400 pro user saber que fez bad request
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(java.util.Map.of("erro", e.getMessage()))
+                    .build();
+        }
     }
 
     @GET

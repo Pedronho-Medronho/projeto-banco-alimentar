@@ -7,11 +7,10 @@
 <body>
     <h1>Banco Alimentar</h1>
 
-    <!-- Botões principais -->
     <button type="button" onclick="mostrarRegisto()">Registar utilizador</button>
     <button type="button" onclick="mostrarDoacao()">Propor doação</button>
+    <button type="button" onclick="location.href='/funcionario.html'">Área do funcionário</button>
 
-    <!-- Formulário de registo -->
     <div id="formRegisto" style="display:none">
         <h2>Registar Utilizador</h2>
         <input id="nome" placeholder="Nome"><br>
@@ -26,20 +25,18 @@
         <p id="respostaRegisto"></p>
     </div>
 
-    <!-- Formulário de doação -->
     <div id="formDoacao" style="display:none">
         <h2>Propor Doação</h2>
         <input id="doadorId" placeholder="ID do doador"><br>
-        <input id="nomeAlimento" placeholder="Alimento"><br>
-        <input id="marca" placeholder="Marca"><br>
-        <input id="validade" placeholder="Validade (AAAA-MM-DD)"><br>
-        <input id="quantidade" placeholder="Quantidade"><br>
+        <div id="listaAlimentos"></div>
+        <button type="button" onclick="adicionarAlimento()">+ Adicionar alimento</button><br>
         <button type="button" onclick="doar()">Enviar</button>
         <p id="respostaDoacao"></p>
     </div>
 
-    <!-- Script de comunicação com a API -->
     <script>
+        let totalAlimentos = 0;
+
         function mostrarRegisto() {
             document.getElementById("formRegisto").style.display = "block";
             document.getElementById("formDoacao").style.display = "none";
@@ -48,6 +45,38 @@
         function mostrarDoacao() {
             document.getElementById("formDoacao").style.display = "block";
             document.getElementById("formRegisto").style.display = "none";
+            if (totalAlimentos === 0) {
+                adicionarAlimento();
+            }
+        }
+
+        function linhaAlimento(n) {
+            return '<div class="linhaAlimento" style="border:1px solid #ccc; padding:8px; margin:8px 0">'
+                + '<b>Alimento ' + n + '</b><br>'
+                + '<input id="nomeAlimento' + n + '" placeholder="Alimento"><br>'
+                + '<input id="marca' + n + '" placeholder="Marca"><br>'
+                + '<input id="validade' + n + '" type="date"><br>'
+                + '<input id="quantidade' + n + '" placeholder="Quantidade"><br>'
+                + '<select id="tipoAlimento' + n + '">'
+                + '<option value="SECOS">Secos</option>'
+                + '<option value="PERECIVEIS">Perecíveis</option>'
+                + '<option value="ENLATADOS">Enlatados</option>'
+                + '<option value="MATERNAL">Maternal</option>'
+                + '<option value="OUTROS">Outros</option>'
+                + '</select><br>'
+                + '<input id="pesoMedio' + n + '" placeholder="Peso médio por unidade (kg)"><br>'
+                + (n > 1 ? '<button type="button" onclick="removerAlimento(this)">✕ Remover este alimento</button>' : '')
+                + '</div>';
+        }
+
+        function adicionarAlimento() {
+            totalAlimentos++;
+            document.getElementById("listaAlimentos").insertAdjacentHTML(
+                "beforeend", linhaAlimento(totalAlimentos));
+        }
+
+        function removerAlimento(botao) {
+            botao.closest(".linhaAlimento").remove();
         }
 
         async function registar() {
@@ -64,47 +93,83 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(entidade)
                 });
+                const texto = await resposta.text();
+                let dados;
+                try {
+                    dados = JSON.parse(texto);
+                } catch (e) {
+                    throw new Error("Erro interno do servidor");
+                }
                 if (resposta.ok) {
-                    const dados = await resposta.json();
                     document.getElementById("respostaRegisto").textContent =
                         "Registado com ID: " + dados.id;
                 } else {
                     document.getElementById("respostaRegisto").textContent =
-                        "Erro " + resposta.status;
+                        "⚠ " + (dados.erro || "Erro " + resposta.status);
                 }
             } catch (erro) {
-                document.getElementById("respostaRegisto").textContent =
-                    "Erro de rede: " + erro;
+                document.getElementById("respostaRegisto").textContent = "⚠ " + erro.message;
             }
         }
 
         async function doar() {
             try {
+                const linhas = document.querySelectorAll(".linhaAlimento");
+                const conteudos = [];
+                for (const linha of linhas) {
+                    const n = linha.querySelector("input[id^='nomeAlimento']").id.replace("nomeAlimento", "");
+                    conteudos.push({
+                        nomeAlimento: document.getElementById("nomeAlimento" + n).value,
+                        marca: document.getElementById("marca" + n).value,
+                        validade: document.getElementById("validade" + n).value,
+                        quantidade: parseFloat(document.getElementById("quantidade" + n).value),
+                        tipoAlimento: document.getElementById("tipoAlimento" + n).value,
+                        pesoMedio: parseFloat(document.getElementById("pesoMedio" + n).value)
+                    });
+                }
+
+                if (conteudos.length === 0) {
+                    document.getElementById("respostaDoacao").textContent =
+                        "⚠ Adiciona pelo menos um alimento";
+                    return;
+                }
+                if (!conteudos[0].validade) {
+                    document.getElementById("respostaDoacao").textContent =
+                        "⚠ Escolhe a data de validade no calendário";
+                    return;
+                }
+                if (isNaN(conteudos[0].quantidade) || conteudos[0].quantidade <= 0) {
+                    document.getElementById("respostaDoacao").textContent =
+                        "⚠ Quantidade inválida";
+                    return;
+                }
+
                 const doacao = {
-                    doadorId: document.getElementById("doadorId").value,
-                    conteudos: [{
-                        nomeAlimento: document.getElementById("nomeAlimento").value,
-                        marca: document.getElementById("marca").value,
-                        validade: document.getElementById("validade").value,
-                        quantidade: parseFloat(document.getElementById("quantidade").value)
-                    }]
+                    doadorId: parseInt(document.getElementById("doadorId").value, 10),
+                    conteudos: conteudos
                 };
+
                 const resposta = await fetch("/api/doacoes", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(doacao)
                 });
+                const texto = await resposta.text();
+                let dados;
+                try {
+                    dados = JSON.parse(texto);
+                } catch (e) {
+                    throw new Error("Erro interno do servidor — verifica os campos");
+                }
                 if (resposta.ok) {
-                    const dados = await resposta.json();
                     document.getElementById("respostaDoacao").textContent =
-                        "Doação registada com ID: " + dados.id;
+                        "Doação registada com ID: " + dados.id + " (" + conteudos.length + " alimentos)";
                 } else {
                     document.getElementById("respostaDoacao").textContent =
-                        "Erro " + resposta.status;
+                        "⚠ " + (dados.erro || "Erro " + resposta.status);
                 }
             } catch (erro) {
-                document.getElementById("respostaDoacao").textContent =
-                    "Erro de rede: " + erro;
+                document.getElementById("respostaDoacao").textContent = "⚠ " + erro.message;
             }
         }
     </script>

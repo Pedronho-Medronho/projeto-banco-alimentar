@@ -1,6 +1,7 @@
 info:
   name: Doação com quantidade
   type: http
+  seq: 1
 
 http:
   method: POST
@@ -11,7 +12,7 @@ http:
       {
         "doadorId": 1,
         "conteudos": [
-          { "nomeAlimento": "Arroz", "marca": "Cristal", "validade": "2027-12-31", "quantidade": 100 }
+          { "nomeAlimento": "Arroz", "marca": "Cristal", "validade": "2027/12/31", "quantidade": 100 }
         ]
       }
   auth: inherit

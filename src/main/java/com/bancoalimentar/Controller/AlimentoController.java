@@ -2,7 +2,6 @@ package com.bancoalimentar.Controller;
 
 import com.bancoalimentar.Service.AlimentoService;
 import com.bancoalimentar.model.Alimento;
-import com.bancoalimentar.model.Entidade;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
@@ -40,7 +39,7 @@ public class AlimentoController {
         return Response.ok(alimento).build();
     }
 
-    // GET vencidos (validade < data atual da consulta)
+    // GET vencidos=passados de validade (validade < data atual da consulta)
     @GET
     @Path("/vencidos")
     public Response listarVencidos() {
